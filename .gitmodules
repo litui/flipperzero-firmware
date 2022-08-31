@@ -28,3 +28,6 @@
 [submodule "lib/mbedtls"]
 	path = lib/mbedtls
 	url = https://github.com/Mbed-TLS/mbedtls.git
+[submodule "lib/stm32_mw_usb_host"]
+	path = lib/stm32_mw_usb_host
+	url = https://github.com/STMicroelectronics/stm32_mw_usb_host
