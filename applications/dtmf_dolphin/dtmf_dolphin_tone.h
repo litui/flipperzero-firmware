@@ -1,5 +1,6 @@
 #pragma once
 #include "dtmf_dolphin_hal.h"
+#include "tones/dtmf_dolphin_dialer_tones.h"
 #include "tones/dtmf_dolphin_bluebox_tones.h"
 
 #ifdef __cplusplus
@@ -7,6 +8,7 @@ extern "C" {
 #endif
 
 typedef enum {
+    DTMF_DOLPHIN_TONE_BLOCK_DIALER,
     DTMF_DOLPHIN_TONE_BLOCK_BLUEBOX,
     DTMF_DOLPHIN_TONE_BLOCK_REDBOX,
 } DTMFDolphinToneSection;

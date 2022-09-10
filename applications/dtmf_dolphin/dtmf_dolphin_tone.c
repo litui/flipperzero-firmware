@@ -1,7 +1,11 @@
 #include "dtmf_dolphin_tone.h"
 
 const char* dtmf_dolphin_get_tone_name(uint8_t index, DTMFDolphinToneSection block) {
-    if (block == DTMF_DOLPHIN_TONE_BLOCK_BLUEBOX) {
+    if (block == DTMF_DOLPHIN_TONE_BLOCK_DIALER) {
+        if (index < DTMF_DOLPHIN_DIALER_TONE_COUNT) {
+            return dtmf_dolphin_dialer_tone[index].name;
+        }
+    } else if (block == DTMF_DOLPHIN_TONE_BLOCK_BLUEBOX) {
         if (index < DTMF_DOLPHIN_BLUEBOX_TONE_COUNT) {
             return dtmf_dolphin_bluebox_tone[index].name;
         }

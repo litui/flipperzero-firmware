@@ -50,11 +50,21 @@ static DTMFDolphinApp* app_alloc() {
         DTMFDolphinViewMainMenu,
         variable_item_list_get_view(app->main_menu_list));
 
+    app->dtmf_dolphin_dialer = dtmf_dolphin_dialer_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        DTMFDolphinViewDialer,
+        dtmf_dolphin_dialer_get_view(app->dtmf_dolphin_dialer));
+
     app->dtmf_dolphin_bluebox = dtmf_dolphin_bluebox_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher,
         DTMFDolphinViewBluebox,
         dtmf_dolphin_bluebox_get_view(app->dtmf_dolphin_bluebox));
+
+    // app->dialer_button_panel = button_panel_alloc();
+    // app->bluebox_button_panel = button_panel_alloc();
+    // app->redbox_button_panel = button_panel_alloc();
 
     app->notification = furi_record_open(RECORD_NOTIFICATION);
     notification_message(app->notification, &sequence_display_backlight_enforce_on);
@@ -68,15 +78,21 @@ static void app_free(DTMFDolphinApp* app) {
     furi_assert(app);
     view_dispatcher_remove_view(app->view_dispatcher, DTMFDolphinViewMainMenu);
     view_dispatcher_remove_view(app->view_dispatcher, DTMFDolphinViewBluebox);
+    view_dispatcher_remove_view(app->view_dispatcher, DTMFDolphinViewDialer);
     variable_item_list_free(app->main_menu_list);
 
     dtmf_dolphin_bluebox_free(app->dtmf_dolphin_bluebox);
+    dtmf_dolphin_dialer_free(app->dtmf_dolphin_dialer);
 
     view_dispatcher_free(app->view_dispatcher);
     scene_manager_free(app->scene_manager);
 
     furi_message_queue_free(app->queue);
     free(app->sample_buffer);
+
+    // button_panel_free(app->dialer_button_panel);
+    // button_panel_free(app->bluebox_button_panel);
+    // button_panel_free(app->redbox_button_panel);
 
     notification_message(app->notification, &sequence_display_backlight_enforce_auto);
 
