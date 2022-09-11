@@ -18,13 +18,14 @@ static bool dtmf_dolphin_bluebox_process_ok(DTMFDolphinBluebox* dtmf_dolphin_blu
 
 static void dtmf_dolphin_bluebox_draw_callback(Canvas* canvas, void* _model) {
     DTMFDolphinBlueboxModel* model = _model;
+    UNUSED(model);
     canvas_set_font(canvas, FontPrimary);
     elements_multiline_text_aligned(canvas, 64, 2, AlignCenter, AlignTop, "Bluebox Mode");
     canvas_set_font(canvas, FontSecondary);
     elements_multiline_text_aligned(
         canvas, 64, 16, AlignCenter, AlignTop, "Press < or > to select");
-    elements_multiline_text_aligned(
-        canvas, 64, 32, AlignCenter, AlignTop, dtmf_dolphin_get_tone_name(model->index, DTMF_DOLPHIN_TONE_BLOCK_BLUEBOX));
+    // elements_multiline_text_aligned(
+    //     canvas, 64, 32, AlignCenter, AlignTop, dtmf_dolphin_get_tone_name(model->index, DTMF_DOLPHIN_TONE_BLOCK_BLUEBOX));
 }
 
 static bool dtmf_dolphin_bluebox_input_callback(InputEvent* event, void* context) {

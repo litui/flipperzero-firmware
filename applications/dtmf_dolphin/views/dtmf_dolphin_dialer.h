@@ -2,6 +2,7 @@
 
 #include <gui/view.h>
 #include "../dtmf_dolphin_tone.h"
+#include "dtmf_dolphin_common.h"
 
 typedef struct DTMFDolphinDialer DTMFDolphinDialer;
 typedef void (*DTMFDolphinDialerOkCallback)(InputType type, void* context);

@@ -9,60 +9,95 @@ typedef struct DTMFDolphinDialer {
 } DTMFDolphinDialer;
 
 typedef struct {
-    uint8_t index;
+    uint8_t row;
+    uint8_t col;
 } DTMFDolphinDialerModel;
 
+static bool dtmf_dolphin_dialer_process_up(DTMFDolphinDialer* dtmf_dolphin_dialer);
+static bool dtmf_dolphin_dialer_process_down(DTMFDolphinDialer* dtmf_dolphin_dialer);
 static bool dtmf_dolphin_dialer_process_left(DTMFDolphinDialer* dtmf_dolphin_dialer);
 static bool dtmf_dolphin_dialer_process_right(DTMFDolphinDialer* dtmf_dolphin_dialer);
 static bool dtmf_dolphin_dialer_process_ok(DTMFDolphinDialer* dtmf_dolphin_dialer, InputEvent* event);
 
-static void dtmf_dolphin_dialer_draw_callback(Canvas* canvas, void* _model) {
+void draw_button(Canvas* canvas, uint8_t row, uint8_t col, bool invert) {
+
+    uint8_t left = DTMF_DOLPHIN_NUMPAD_X + \
+        // ((col + 1) * DTMF_DOLPHIN_BUTTON_PADDING) + 
+        (col * DTMF_DOLPHIN_BUTTON_WIDTH);
+        // (col * DTMF_DOLPHIN_BUTTON_PADDING);
+    uint8_t top = DTMF_DOLPHIN_NUMPAD_Y + \
+        // ((row + 1) * DTMF_DOLPHIN_BUTTON_PADDING) + 
+        (row * DTMF_DOLPHIN_BUTTON_HEIGHT);
+        // (row * DTMF_DOLPHIN_BUTTON_PADDING);
+
+    uint8_t span = dtmf_dolphin_get_tone_span(row, col, DTMF_DOLPHIN_TONE_BLOCK_DIALER);
+
+    canvas_set_color(canvas, ColorBlack);
+    
+    if (invert)
+        canvas_draw_rbox(canvas, left, top,
+            (DTMF_DOLPHIN_BUTTON_WIDTH * span) - (DTMF_DOLPHIN_BUTTON_PADDING * 2),
+            DTMF_DOLPHIN_BUTTON_HEIGHT - (DTMF_DOLPHIN_BUTTON_PADDING * 2),
+            2);
+    else
+        canvas_draw_rframe(canvas, left, top,
+            (DTMF_DOLPHIN_BUTTON_WIDTH * span) - (DTMF_DOLPHIN_BUTTON_PADDING * 2),
+            DTMF_DOLPHIN_BUTTON_HEIGHT- (DTMF_DOLPHIN_BUTTON_PADDING * 2),
+            2);
+
+    if (invert)
+        canvas_invert_color(canvas);
+
+
+    canvas_set_font(canvas, FontSecondary);
+    // canvas_set_color(canvas, invert ? ColorWhite : ColorBlack);
+    canvas_draw_str_aligned(canvas,
+        left - 1 + (int) ((DTMF_DOLPHIN_BUTTON_WIDTH * span) / 2),
+        top + (int) (DTMF_DOLPHIN_BUTTON_HEIGHT / 2),
+        AlignCenter,
+        AlignCenter,
+        dtmf_dolphin_get_tone_name(row, col, DTMF_DOLPHIN_TONE_BLOCK_DIALER));
+
+    if (invert)
+        canvas_invert_color(canvas);
+}
+
+void draw_dialer(Canvas* canvas, void* _model) {
     DTMFDolphinDialerModel* model = _model;
-    UNUSED(model);
-    canvas_set_font(canvas, FontPrimary);
-    elements_multiline_text(canvas, 2, 10, "Dialer");
-    elements_multiline_text(canvas, 78, 10, "Detail");
-    canvas_draw_line(canvas, 76, 0, 76, 64);
-    // elements_multiline_text_aligned(canvas, 64, 2, AlignCenter, AlignTop, "Dialer Mode");
+    uint8_t max_rows;
+    uint8_t max_cols;
+    uint8_t max_span;
+    dtmf_dolphin_tone_get_max_pos(&max_rows, &max_cols, &max_span, DTMF_DOLPHIN_TONE_BLOCK_DIALER);
+
     canvas_set_font(canvas, FontSecondary);
 
-    // canvas_draw_frame(canvas, 38, 12, 52, 52);
-    // canvas_draw_circle(canvas, 45, 18, 5);
-    canvas_draw_rframe(canvas, 2, 13, 11, 11, 2);
-    canvas_draw_str_aligned(canvas, 7, 19, AlignCenter, AlignCenter, "1");
-    canvas_draw_rframe(canvas, 15, 13, 11, 11, 2);
-    canvas_draw_str_aligned(canvas, 20, 19, AlignCenter, AlignCenter, "2");
-    canvas_draw_rframe(canvas, 28, 13, 11, 11, 2);
-    canvas_draw_str_aligned(canvas, 33, 19, AlignCenter, AlignCenter, "3");
-    canvas_draw_rframe(canvas, 41, 13, 33, 11, 2);
-    canvas_draw_str_aligned(canvas, 57, 19, AlignCenter, AlignCenter, "A");
+    for (int r = 0; r < max_rows; r++) {
+        for (int c = 0; c < max_cols; c++) {
+            if (model->row == r && model->col == c)
+                draw_button(canvas, r, c, true);
+            else
+                draw_button(canvas, r, c, false);
+        }
+    }
+}
 
-    canvas_draw_rframe(canvas, 2, 26, 11, 11, 2);
-    canvas_draw_str_aligned(canvas, 7, 32, AlignCenter, AlignCenter, "4");
-    canvas_draw_rframe(canvas, 15, 26, 11, 11, 2);
-    canvas_draw_str_aligned(canvas, 20, 32, AlignCenter, AlignCenter, "5");
-    canvas_draw_rframe(canvas, 28, 26, 11, 11, 2);
-    canvas_draw_str_aligned(canvas, 33, 32, AlignCenter, AlignCenter, "6");
-    canvas_draw_rframe(canvas, 41, 26, 33, 11, 2);
-    canvas_draw_str_aligned(canvas, 57, 32, AlignCenter, AlignCenter, "B");
+static void dtmf_dolphin_dialer_draw_callback(Canvas* canvas, void* _model) {
+    DTMFDolphinDialerModel* model = _model;
+    uint8_t max_rows;
+    uint8_t max_cols;
+    uint8_t max_span;
+    dtmf_dolphin_tone_get_max_pos(&max_rows, &max_cols, &max_span, DTMF_DOLPHIN_TONE_BLOCK_DIALER);
 
-    canvas_draw_rframe(canvas, 2, 39, 11, 11, 2);
-    canvas_draw_str_aligned(canvas, 7, 45, AlignCenter, AlignCenter, "7");
-    canvas_draw_rframe(canvas, 15, 39, 11, 11, 2);
-    canvas_draw_str_aligned(canvas, 20, 45, AlignCenter, AlignCenter, "8");
-    canvas_draw_rframe(canvas, 28, 39, 11, 11, 2);
-    canvas_draw_str_aligned(canvas, 33, 45, AlignCenter, AlignCenter, "9");
-    canvas_draw_rframe(canvas, 41, 39, 33, 11, 2);
-    canvas_draw_str_aligned(canvas, 57, 45, AlignCenter, AlignCenter, "C");
+    canvas_set_font(canvas, FontPrimary);
+    elements_multiline_text(canvas, 2, 10, "Dialer");
+    canvas_draw_line(canvas,
+        (max_span * DTMF_DOLPHIN_BUTTON_WIDTH) + 1, 0,
+        (max_span * DTMF_DOLPHIN_BUTTON_WIDTH) + 1, canvas_height(canvas));
+    elements_multiline_text(canvas, (max_span * DTMF_DOLPHIN_BUTTON_WIDTH) + 4, 10, "Detail");
+    canvas_draw_line(canvas, 0, DTMF_DOLPHIN_NUMPAD_Y - 3, canvas_width(canvas), DTMF_DOLPHIN_NUMPAD_Y - 3);
+    // elements_multiline_text_aligned(canvas, 64, 2, AlignCenter, AlignTop, "Dialer Mode");
 
-    canvas_draw_rframe(canvas, 2, 52, 11, 11, 2);
-    canvas_draw_str_aligned(canvas, 7, 58, AlignCenter, AlignCenter, "*");
-    canvas_draw_rframe(canvas, 15, 52, 11, 11, 2);
-    canvas_draw_str_aligned(canvas, 20, 58, AlignCenter, AlignCenter, "0");
-    canvas_draw_rframe(canvas, 28, 52, 11, 11, 2);
-    canvas_draw_str_aligned(canvas, 33, 58, AlignCenter, AlignCenter, "#");
-    canvas_draw_rframe(canvas, 41, 52, 33, 11, 2);
-    canvas_draw_str_aligned(canvas, 57, 58, AlignCenter, AlignCenter, "D");
+    draw_dialer(canvas, model);
 
     // elements_multiline_text_aligned(
     //     canvas, 64, 16, AlignCenter, AlignTop, "Press < or > to select");
@@ -80,6 +115,10 @@ static bool dtmf_dolphin_dialer_input_callback(InputEvent* event, void* context)
             consumed = dtmf_dolphin_dialer_process_right(dtmf_dolphin_dialer);
         } else if(event->key == InputKeyLeft) {
             consumed = dtmf_dolphin_dialer_process_left(dtmf_dolphin_dialer);
+        } else if(event->key == InputKeyUp) {
+            consumed = dtmf_dolphin_dialer_process_up(dtmf_dolphin_dialer);
+        } else if(event->key == InputKeyDown) {
+            consumed = dtmf_dolphin_dialer_process_down(dtmf_dolphin_dialer);
         }
     } else if(event->key == InputKeyOk) {
         consumed = dtmf_dolphin_dialer_process_ok(dtmf_dolphin_dialer, event);
@@ -88,11 +127,38 @@ static bool dtmf_dolphin_dialer_input_callback(InputEvent* event, void* context)
     return consumed;
 }
 
+static bool dtmf_dolphin_dialer_process_up(DTMFDolphinDialer* dtmf_dolphin_dialer) {
+    with_view_model(
+        dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel * model) {
+            if(model->row) {
+                model->row--;
+            }
+            return true;
+        });
+    return true;
+}
+
+static bool dtmf_dolphin_dialer_process_down(DTMFDolphinDialer* dtmf_dolphin_dialer) {
+    uint8_t max_rows = 0;
+    uint8_t max_cols = 0;
+    uint8_t max_span = 0;
+    dtmf_dolphin_tone_get_max_pos(&max_rows, &max_cols, &max_span, DTMF_DOLPHIN_TONE_BLOCK_DIALER);
+
+    with_view_model(
+        dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel * model) {
+            if(model->row < max_rows - 1) {
+                model->row++;
+            }
+            return true;
+        });
+    return true;
+}
+
 static bool dtmf_dolphin_dialer_process_left(DTMFDolphinDialer* dtmf_dolphin_dialer) {
     with_view_model(
         dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel * model) {
-            if(model->index) {
-                model->index--;
+            if(model->col) {
+                model->col--;
             }
             return true;
         });
@@ -100,10 +166,15 @@ static bool dtmf_dolphin_dialer_process_left(DTMFDolphinDialer* dtmf_dolphin_dia
 }
 
 static bool dtmf_dolphin_dialer_process_right(DTMFDolphinDialer* dtmf_dolphin_dialer) {
+    uint8_t max_rows = 0;
+    uint8_t max_cols = 0;
+    uint8_t max_span = 0;
+    dtmf_dolphin_tone_get_max_pos(&max_rows, &max_cols, &max_span, DTMF_DOLPHIN_TONE_BLOCK_DIALER);
+
     with_view_model(
         dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel * model) {
-            if(model->index < DTMF_DOLPHIN_BLUEBOX_TONE_COUNT) {
-                model->index++;
+            if(model->col < max_cols - 1) {
+                model->col++;
             }
             return true;
         });
@@ -115,22 +186,24 @@ static bool dtmf_dolphin_dialer_process_ok(DTMFDolphinDialer* dtmf_dolphin_diale
 
     with_view_model(
         dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel* model) {
-            if(event->type == InputTypePress) {
-                if(model->index < DTMF_DOLPHIN_BLUEBOX_TONE_COUNT) {
-                    // TODO: Do the thing
-                } else {
-                    // TODO: Do the thing
-                }
-                consumed = true;
-            } else if(event->type == InputTypeRelease) {
-                if(model->index < DTMF_DOLPHIN_BLUEBOX_TONE_COUNT) {
-                    // gpio_item_set_pin(Model->pin_idx, false);
-                } else {
-                    // gpio_item_set_all_pins(false);
-                }
-                consumed = true;
-            }
-            dtmf_dolphin_dialer->callback(event->type, dtmf_dolphin_dialer->context);
+            UNUSED(model);
+            UNUSED(event);
+            // if(event->type == InputTypePress) {
+            //     if(model->index < DTMF_DOLPHIN_BLUEBOX_TONE_COUNT) {
+            //         // TODO: Do the thing
+            //     } else {
+            //         // TODO: Do the thing
+            //     }
+            //     consumed = true;
+            // } else if(event->type == InputTypeRelease) {
+            //     if(model->index < DTMF_DOLPHIN_BLUEBOX_TONE_COUNT) {
+            //         // gpio_item_set_pin(Model->pin_idx, false);
+            //     } else {
+            //         // gpio_item_set_all_pins(false);
+            //     }
+            //     consumed = true;
+            // }
+            // dtmf_dolphin_dialer->callback(event->type, dtmf_dolphin_dialer->context);
             return true;
         });
 
@@ -142,6 +215,15 @@ DTMFDolphinDialer* dtmf_dolphin_dialer_alloc() {
 
     dtmf_dolphin_dialer->view = view_alloc();
     view_allocate_model(dtmf_dolphin_dialer->view, ViewModelTypeLocking, sizeof(DTMFDolphinDialerModel));
+
+    with_view_model(
+        dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel * model) {
+            model->col = 0;
+            model->row = 0;
+            return true;
+        }
+    );
+
     view_set_context(dtmf_dolphin_dialer->view, dtmf_dolphin_dialer);
     view_set_draw_callback(dtmf_dolphin_dialer->view, dtmf_dolphin_dialer_draw_callback);
     view_set_input_callback(dtmf_dolphin_dialer->view, dtmf_dolphin_dialer_input_callback);

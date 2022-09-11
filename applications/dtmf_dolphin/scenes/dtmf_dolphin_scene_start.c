@@ -52,11 +52,11 @@ bool dtmf_dolphin_scene_start_on_event(void* context, SceneManagerEvent event) {
         if (event.event == DTMFDolphinEventStartDialer) {
             scene_manager_set_scene_state(app->scene_manager, DTMFDolphinSceneDialer, DTMFDolphinItemDialer);
             scene_manager_next_scene(app->scene_manager, DTMFDolphinSceneDialer);
-        } else if (event.event == DTMFDolphinEventStartBluebox) {
-            scene_manager_set_scene_state(app->scene_manager, DTMFDolphinSceneBluebox, DTMFDolphinItemBluebox);
-            scene_manager_next_scene(app->scene_manager, DTMFDolphinSceneBluebox);
         }
-        // Custom event stuff here
+        // } else if (event.event == DTMFDolphinEventStartBluebox) {
+        //     scene_manager_set_scene_state(app->scene_manager, DTMFDolphinSceneBluebox, DTMFDolphinItemBluebox);
+        //     scene_manager_next_scene(app->scene_manager, DTMFDolphinSceneBluebox);
+        // }
         consumed = true;
     }
     return consumed;
