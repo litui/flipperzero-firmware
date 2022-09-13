@@ -1,6 +1,9 @@
 #pragma once
+#include <furi.h>
+#include <furi_hal.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <stm32wb55xx.h>
 #include <stm32wbxx_ll_tim.h>
 #include <stm32wbxx_ll_dma.h>
 

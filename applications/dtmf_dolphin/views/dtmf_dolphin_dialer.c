@@ -11,6 +11,7 @@ typedef struct DTMFDolphinDialer {
 typedef struct {
     uint8_t row;
     uint8_t col;
+    float *freq;
 } DTMFDolphinDialerModel;
 
 static bool dtmf_dolphin_dialer_process_up(DTMFDolphinDialer* dtmf_dolphin_dialer);
@@ -120,6 +121,15 @@ static bool dtmf_dolphin_dialer_input_callback(InputEvent* event, void* context)
         } else if(event->key == InputKeyDown) {
             consumed = dtmf_dolphin_dialer_process_down(dtmf_dolphin_dialer);
         }
+    
+        with_view_model(
+            dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel * model) {
+                if(model->row && model->col) {
+                    dtmf_dolphin_get_tone_frequencies(model->freq, model->row, model->col, DTMF_DOLPHIN_TONE_BLOCK_DIALER);
+                }
+                return true;
+            });
+
     } else if(event->key == InputKeyOk) {
         consumed = dtmf_dolphin_dialer_process_ok(dtmf_dolphin_dialer, event);
     }
@@ -185,25 +195,13 @@ static bool dtmf_dolphin_dialer_process_ok(DTMFDolphinDialer* dtmf_dolphin_diale
     bool consumed = false;
 
     with_view_model(
-        dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel* model) {
-            UNUSED(model);
-            UNUSED(event);
-            // if(event->type == InputTypePress) {
-            //     if(model->index < DTMF_DOLPHIN_BLUEBOX_TONE_COUNT) {
-            //         // TODO: Do the thing
-            //     } else {
-            //         // TODO: Do the thing
-            //     }
-            //     consumed = true;
-            // } else if(event->type == InputTypeRelease) {
-            //     if(model->index < DTMF_DOLPHIN_BLUEBOX_TONE_COUNT) {
-            //         // gpio_item_set_pin(Model->pin_idx, false);
-            //     } else {
-            //         // gpio_item_set_all_pins(false);
-            //     }
-            //     consumed = true;
-            // }
-            // dtmf_dolphin_dialer->callback(event->type, dtmf_dolphin_dialer->context);
+        dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel * model) {
+            if (event->type == InputTypePress) {
+                dtmf_dolphin_player_play_tones(model->freq);
+            } else if (event->type == InputTypeRelease) {
+                dtmf_dolphin_player_stop_tones();
+            }
+
             return true;
         });
 
@@ -220,6 +218,7 @@ DTMFDolphinDialer* dtmf_dolphin_dialer_alloc() {
         dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel * model) {
             model->col = 0;
             model->row = 0;
+            model->freq = malloc(sizeof(float) * 2);
             return true;
         }
     );
@@ -233,6 +232,12 @@ DTMFDolphinDialer* dtmf_dolphin_dialer_alloc() {
 
 void dtmf_dolphin_dialer_free(DTMFDolphinDialer* dtmf_dolphin_dialer) {
     furi_assert(dtmf_dolphin_dialer);
+    with_view_model(
+        dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel * model) {
+            free(model->freq);
+            return true;
+        }
+    );
     view_free(dtmf_dolphin_dialer->view);
     free(dtmf_dolphin_dialer);
 }
@@ -242,14 +247,14 @@ View* dtmf_dolphin_dialer_get_view(DTMFDolphinDialer* dtmf_dolphin_dialer) {
     return dtmf_dolphin_dialer->view;
 }
 
-void dtmf_dolphin_dialer_set_ok_callback(DTMFDolphinDialer* dtmf_dolphin_dialer, DTMFDolphinDialerOkCallback callback, void* context) {
-    furi_assert(dtmf_dolphin_dialer);
-    furi_assert(callback);
-    with_view_model(
-        dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel * model) {
-            UNUSED(model);
-            dtmf_dolphin_dialer->callback = callback;
-            dtmf_dolphin_dialer->context = context;
-            return false;
-        });
-}
+// void dtmf_dolphin_dialer_set_ok_callback(DTMFDolphinDialer* dtmf_dolphin_dialer, DTMFDolphinDialerOkCallback callback, void* context) {
+//     furi_assert(dtmf_dolphin_dialer);
+//     furi_assert(callback);
+//     with_view_model(
+//         dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel * model) {
+//             UNUSED(model);
+//             dtmf_dolphin_dialer->callback = callback;
+//             dtmf_dolphin_dialer->context = context;
+//             return false;
+//         });
+// }

@@ -1,4 +1,6 @@
 #pragma once
+#include "../dtmf_dolphin_player.h"
+
 #define DTMF_DOLPHIN_NUMPAD_X 1
 #define DTMF_DOLPHIN_NUMPAD_Y 14
 #define DTMF_DOLPHIN_BUTTON_WIDTH 13

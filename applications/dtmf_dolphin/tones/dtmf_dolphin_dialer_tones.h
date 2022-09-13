@@ -1,5 +1,5 @@
+#pragma once
 #include <stdint.h>
-#include <gui/elements.h>
 
 #define DTMF_DOLPHIN_DIALER_TONE_COUNT 16
 

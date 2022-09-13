@@ -1,3 +1,4 @@
+#pragma once
 #include <stdint.h>
 
 #define DTMF_DOLPHIN_BLUEBOX_TONE_COUNT 16

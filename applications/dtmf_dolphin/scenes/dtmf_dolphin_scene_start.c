@@ -1,11 +1,5 @@
 #include "../dtmf_dolphin_i.h"
 
-enum DTMFDolphinItem {
-    DTMFDolphinItemDialer,
-    DTMFDolphinItemBluebox,
-    DTMFDolphinItemRedbox,
-};
-
 static void dtmf_dolphin_scene_start_main_menu_enter_callback(void* context, uint32_t index) {
     DTMFDolphinApp* app = context;
     if (index == DTMFDolphinItemDialer) {
@@ -32,7 +26,7 @@ void dtmf_dolphin_scene_start_on_enter(void* context) {
         app);
 
     variable_item_list_add(var_item_list, "Dialer", 0, NULL, NULL);
-    variable_item_list_add(var_item_list, "Bluebox", 0, NULL, NULL);
+    // variable_item_list_add(var_item_list, "Bluebox", 0, NULL, NULL);
 
     variable_item_list_set_selected_item(
         var_item_list,
@@ -52,11 +46,10 @@ bool dtmf_dolphin_scene_start_on_event(void* context, SceneManagerEvent event) {
         if (event.event == DTMFDolphinEventStartDialer) {
             scene_manager_set_scene_state(app->scene_manager, DTMFDolphinSceneDialer, DTMFDolphinItemDialer);
             scene_manager_next_scene(app->scene_manager, DTMFDolphinSceneDialer);
+        } else if (event.event == DTMFDolphinEventStartBluebox) {
+            scene_manager_set_scene_state(app->scene_manager, DTMFDolphinSceneBluebox, DTMFDolphinItemBluebox);
+            scene_manager_next_scene(app->scene_manager, DTMFDolphinSceneBluebox);
         }
-        // } else if (event.event == DTMFDolphinEventStartBluebox) {
-        //     scene_manager_set_scene_state(app->scene_manager, DTMFDolphinSceneBluebox, DTMFDolphinItemBluebox);
-        //     scene_manager_next_scene(app->scene_manager, DTMFDolphinSceneBluebox);
-        // }
         consumed = true;
     }
     return consumed;

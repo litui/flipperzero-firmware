@@ -7,8 +7,15 @@ void dtmf_dolphin_scene_dialer_on_enter(void *context) {
 }
 
 bool dtmf_dolphin_scene_dialer_on_event(void* context, SceneManagerEvent event) {
-    UNUSED(context);
-    UNUSED(event);
+    DTMFDolphinApp* app = context;
+    UNUSED(app);
+    bool consumed = false;
+
+    if(event.type == SceneManagerEventTypeCustom) {
+        consumed = true;
+    }
+
+    return consumed;
     return false;
 }
 
