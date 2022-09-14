@@ -19,10 +19,10 @@ static void dtmf_dolphin_app_tick_event_callback(void* context) {
     furi_assert(context);
     DTMFDolphinApp* app = context;
 
-    // Needed to handle queueing to ISR
-    dtmf_dolphin_player_handle_tick();
-
-    scene_manager_handle_tick_event(app->scene_manager);
+    // Needed to handle queueing to ISR and prioritization of audio
+    if(!dtmf_dolphin_player_handle_tick()) {
+        scene_manager_handle_tick_event(app->scene_manager);
+    }
 }
 
 static DTMFDolphinApp* app_alloc() {
@@ -38,7 +38,7 @@ static DTMFDolphinApp* app_alloc() {
     app->player.wf1_pos = 0;
     app->player.wf2_pos = 0;
     app->player.queue = furi_message_queue_alloc(10, sizeof(DTMFDolphinEvent));
-    app->player.volume = 30.0f;
+    app->player.volume = 2.0f;
     app->player.playing = false;
 
     app->gui = furi_record_open(RECORD_GUI);

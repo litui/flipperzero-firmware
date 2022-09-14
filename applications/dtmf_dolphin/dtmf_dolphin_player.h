@@ -32,13 +32,13 @@ bool dtmf_dolphin_player_init(void* context);
 
 void dtmf_dolphin_player_clear_samples();
 
-bool dtmf_dolphin_player_generate_waveform();
+bool dtmf_dolphin_player_generate_waveform(size_t index);
 
 bool dtmf_dolphin_player_play_tones(float *freq);
 
 bool dtmf_dolphin_player_stop_tones();
 
-void dtmf_dolphin_player_handle_tick();
+bool dtmf_dolphin_player_handle_tick();
 
 #ifdef __cplusplus
 }

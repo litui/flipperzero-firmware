@@ -20,8 +20,6 @@ void dtmf_dolphin_get_tone_frequencies(float *freq, uint8_t row, uint8_t col, DT
 
 void dtmf_dolphin_tone_get_max_pos(uint8_t *max_rows, uint8_t *max_cols, uint8_t *max_span, DTMFDolphinToneSection block);
 
-// void dtmf_dolphin_bluebox_generate(uint8_t index, uint8_t *buffer);
-
 #ifdef __cplusplus
 }
 #endif

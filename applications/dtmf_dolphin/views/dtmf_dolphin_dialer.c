@@ -82,6 +82,10 @@ void draw_dialer(Canvas* canvas, void* _model) {
     }
 }
 
+void update_frequencies(DTMFDolphinDialerModel *model) {
+    dtmf_dolphin_get_tone_frequencies(model->freq, model->row, model->col, DTMF_DOLPHIN_TONE_BLOCK_DIALER);
+}
+
 static void dtmf_dolphin_dialer_draw_callback(Canvas* canvas, void* _model) {
     DTMFDolphinDialerModel* model = _model;
     uint8_t max_rows;
@@ -100,10 +104,20 @@ static void dtmf_dolphin_dialer_draw_callback(Canvas* canvas, void* _model) {
 
     draw_dialer(canvas, model);
 
-    // elements_multiline_text_aligned(
-    //     canvas, 64, 16, AlignCenter, AlignTop, "Press < or > to select");
-    // elements_multiline_text_aligned(
-    //     canvas, 64, 32, AlignCenter, AlignTop, dtmf_dolphin_get_tone_name(model->index, DTMF_DOLPHIN_TONE_BLOCK_BLUEBOX));
+    string_t output;
+    string_init(output);
+
+    string_cat_printf(
+        output,
+        "F1: %u Hz\nF2: %u Hz",
+        model->freq[0] ? (unsigned int) model->freq[0] : 0,
+        model->freq[1] ? (unsigned int) model->freq[1] : 0);
+
+    canvas_set_font(canvas, FontSecondary);
+    canvas_set_color(canvas, ColorBlack);
+    elements_multiline_text(canvas, (max_span * DTMF_DOLPHIN_BUTTON_WIDTH) + 4, 21, string_get_cstr(output));
+
+    string_clear(output);
 }
 
 static bool dtmf_dolphin_dialer_input_callback(InputEvent* event, void* context) {
@@ -121,14 +135,6 @@ static bool dtmf_dolphin_dialer_input_callback(InputEvent* event, void* context)
         } else if(event->key == InputKeyDown) {
             consumed = dtmf_dolphin_dialer_process_down(dtmf_dolphin_dialer);
         }
-    
-        with_view_model(
-            dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel * model) {
-                if(model->row && model->col) {
-                    dtmf_dolphin_get_tone_frequencies(model->freq, model->row, model->col, DTMF_DOLPHIN_TONE_BLOCK_DIALER);
-                }
-                return true;
-            });
 
     } else if(event->key == InputKeyOk) {
         consumed = dtmf_dolphin_dialer_process_ok(dtmf_dolphin_dialer, event);
@@ -140,8 +146,9 @@ static bool dtmf_dolphin_dialer_input_callback(InputEvent* event, void* context)
 static bool dtmf_dolphin_dialer_process_up(DTMFDolphinDialer* dtmf_dolphin_dialer) {
     with_view_model(
         dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel * model) {
-            if(model->row) {
+            if(model->row > 0) {
                 model->row--;
+                update_frequencies(model);
             }
             return true;
         });
@@ -158,6 +165,7 @@ static bool dtmf_dolphin_dialer_process_down(DTMFDolphinDialer* dtmf_dolphin_dia
         dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel * model) {
             if(model->row < max_rows - 1) {
                 model->row++;
+                update_frequencies(model);
             }
             return true;
         });
@@ -167,8 +175,9 @@ static bool dtmf_dolphin_dialer_process_down(DTMFDolphinDialer* dtmf_dolphin_dia
 static bool dtmf_dolphin_dialer_process_left(DTMFDolphinDialer* dtmf_dolphin_dialer) {
     with_view_model(
         dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel * model) {
-            if(model->col) {
+            if(model->col > 0) {
                 model->col--;
+                update_frequencies(model);
             }
             return true;
         });
@@ -185,6 +194,7 @@ static bool dtmf_dolphin_dialer_process_right(DTMFDolphinDialer* dtmf_dolphin_di
         dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel * model) {
             if(model->col < max_cols - 1) {
                 model->col++;
+                update_frequencies(model);
             }
             return true;
         });
@@ -196,7 +206,10 @@ static bool dtmf_dolphin_dialer_process_ok(DTMFDolphinDialer* dtmf_dolphin_diale
 
     with_view_model(
         dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel * model) {
-            if (event->type == InputTypePress) {
+            if (
+                event->type == InputTypePress ||
+                event->type == InputTypeShort ||
+                event->type == InputTypeLong) {
                 dtmf_dolphin_player_play_tones(model->freq);
             } else if (event->type == InputTypeRelease) {
                 dtmf_dolphin_player_stop_tones();
@@ -219,6 +232,7 @@ DTMFDolphinDialer* dtmf_dolphin_dialer_alloc() {
             model->col = 0;
             model->row = 0;
             model->freq = malloc(sizeof(float) * 2);
+            update_frequencies(model);
             return true;
         }
     );
