@@ -206,10 +206,7 @@ static bool dtmf_dolphin_dialer_process_ok(DTMFDolphinDialer* dtmf_dolphin_diale
 
     with_view_model(
         dtmf_dolphin_dialer->view, (DTMFDolphinDialerModel * model) {
-            if (
-                event->type == InputTypePress ||
-                event->type == InputTypeShort ||
-                event->type == InputTypeLong) {
+            if (event->type == InputTypePress) {
                 dtmf_dolphin_player_play_tones(model->freq);
             } else if (event->type == InputTypeRelease) {
                 dtmf_dolphin_player_stop_tones();

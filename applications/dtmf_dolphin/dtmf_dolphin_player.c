@@ -52,16 +52,17 @@ bool dtmf_dolphin_player_generate_waveform(size_t index) {
 
         data *= player->volume;
 
-        // if (player->wf2_freq) {
-        //     data /= 2;
+        // Downmix second tone with the first
+        if (player->wf2_freq) {
+            data /= 2;
 
-        //     float data_2 = sin(player->wf2_pos * PERIOD_2_PI / player->wf2_period) + 1;
-        //     player->wf2_pos = (player->wf2_pos + 1) % player->wf2_period;
+            float data_2 = sin(player->wf2_pos * PERIOD_2_PI / player->wf2_period) + 1;
+            player->wf2_pos = (player->wf2_pos + 1) % player->wf2_period;
 
-        //     data_2 *= player->volume / 2;
+            data_2 *= player->volume / 2;
 
-        //     data += data_2;
-        // }
+            data += data_2;
+        }
 
         data = tanhf(data);
 
@@ -76,7 +77,7 @@ bool dtmf_dolphin_player_generate_waveform(size_t index) {
             data = 255;
         }
 
-        // player->sample_buffer[i] = data;
+        player->buffer_buffer[i] = data;
         sample_buffer_start[i] = data;
     }
 
@@ -92,11 +93,11 @@ bool dtmf_dolphin_player_play_tones(float *freq) {
     player->wf2_period = 0;
     if (freq[0]) {
         player->wf1_freq = freq[0];
-        player->wf1_period = player->sample_count / freq[0] * 2;
+        player->wf1_period = player->sample_count / freq[0] * 4;
     }
     if (freq[1]) {
         player->wf2_freq = freq[1];
-        player->wf2_period = player->sample_count / freq[1] * 2;
+        player->wf2_period = player->sample_count / freq[1] * 4;
     }
     dtmf_dolphin_player_clear_samples();
 
@@ -130,15 +131,25 @@ bool dtmf_dolphin_player_stop_tones() {
 bool dtmf_dolphin_player_handle_tick() {
     DTMFDolphinPlayerEvent event;
 
-    if(furi_message_queue_get(player->queue, &event, 10U) == FuriStatusOk) {
+    if(furi_message_queue_get(player->queue, &event, FuriWaitForever) == FuriStatusOk) {
         if (player->playing) {
             if(event.type == DTMFDolphinPlayerEventHalfTransfer) {
                 dtmf_dolphin_player_generate_waveform(0);
+                // uint16_t* sample_buffer_start = &player->sample_buffer[0];
+                // for (size_t i = 0; i < player->half_samples; i++) {
+                //     sample_buffer_start[i] = player->buffer_buffer[i];
+                // }
                 return true;
             } else if (event.type == DTMFDolphinPlayerEventFullTransfer) {
                 dtmf_dolphin_player_generate_waveform(player->half_samples);
+                // uint16_t* sample_buffer_start = &player->sample_buffer[player->half_samples];
+                // for (size_t i = 0; i < player->half_samples; i++) {
+                //     sample_buffer_start[i] = player->buffer_buffer[i];
+                // }
                 return true;
             }
+        } else {
+            return true;
         }
     }
     return false;

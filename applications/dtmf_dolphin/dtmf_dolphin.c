@@ -20,7 +20,9 @@ static void dtmf_dolphin_app_tick_event_callback(void* context) {
     DTMFDolphinApp* app = context;
 
     // Needed to handle queueing to ISR and prioritization of audio
-    if(!dtmf_dolphin_player_handle_tick()) {
+    if (app->player.playing) {
+        dtmf_dolphin_player_handle_tick();
+    } else {
         scene_manager_handle_tick_event(app->scene_manager);
     }
 }
